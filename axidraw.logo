@@ -1,0 +1,154 @@
+to safe_run :command
+    make "error_flag "false
+    CATCH "error [run :command]
+    IF :error_flag [print [Error: could not interpret] :command]
+end
+
+to drawcontainer :w :h
+    localmake "p pos
+    localmake "isPenDown pendownp
+    pu setpos (list -w/2 -h/2) setheading 0 pd repeat 2 [fd :h rt 90 fd :w rt 90] pu setpos :p 
+    ifelse :isPenDown [pd] [pu]
+end
+
+to drawscontainer
+    drawcontainer 210 210
+end
+
+to poly :size :angle
+    repeat 10 [wait 1 fd :size rt :angle]
+end
+
+to polystop :side :angle
+    make "turn 0
+    do.while [axifd :side axirt :angle make "turn sum :turn :angle][notequalp (remainder :turn 360) 0]
+end
+
+to polyroll :side :angle1 :angle2
+    make "eturn 0
+    do.while [
+        axirt :angle2
+        polystop :side :angle1
+        make "eturn sum :eturn :angle2
+    ][notequalp (remainder :eturn 360) 0]
+end
+
+to branch :length :level
+    if equalp :level 0 [stop]
+    axifd :length
+    axilt 45
+    branch :length * 0.7 :level - 1
+    axirt 90
+    branch :length * 0.7 :level - 1
+    axilt 45
+    axibk :length
+end
+
+to lbranch :length :angle :level
+    axifd 2 * :length
+    node :length :angle :level
+    axibk 2 * :length
+end
+
+to rbranch :length :angle :level
+    axifd :length
+    node :length :angle :level
+    axibk :length
+end
+
+to node :length :angle :level
+    if equalp :level 0 [stop]
+    axilt :angle
+    lbranch :length :angle :level - 1
+    axirt :angle * 2
+    rbranch :length :angle :level - 1
+    axilt :angle
+end
+
+to newpoly :size :angle
+    make "waittime 30
+    if :dry [make "waittime 1]
+    forever [wait :waittime axifd :size axirt :angle axifd :size axirt :angle * 2]
+end
+
+to polyspi :size :angle :inc :rec
+    if lessequalp :rec 0 [stop]
+    axifd :size axirt :angle
+    polyspi :size + :inc :angle :inc :rec - 1
+end
+
+to inspi :size :angle :inc :rec
+    if lessequalp :rec 0 [stop]
+    axifd :size axirt :angle
+    inspi :size :angle + :inc :inc :rec - 1
+end
+
+
+to axipolystop :side :angle
+    make "turn 0
+    do.while [axifd :side axirt :angle make "turn sum :turn :angle][notequalp (remainder :turn 360) 0]
+end
+
+to axipoly :size :angle
+   repeat 10 [wait 10 axifd :size axirt :angle ]
+end
+
+to axifd :size
+    fd :size
+    if :dry [stop]
+    print shell (sentence "echo "fd :size "> "axidraw)
+end
+
+to axibk :size
+    bk :size
+    if :dry [stop]
+    print shell (sentence "echo "bk :size "> "axidraw)
+end
+
+to axirt :angle
+    rt :angle
+    if :dry [stop]
+    print shell (sentence "echo "rt :angle "> "axidraw)
+end
+
+to axilt :angle
+    lt :angle
+    if :dry [stop]
+    print shell (sentence "echo "lt :angle "> "axidraw)
+end
+
+to axipu
+    pu
+    if :dry [stop]
+    print shell (sentence "echo "pu "> "axidraw)
+end
+
+to axisetpos :xy
+    setpos :xy
+    if :dry [stop]
+    print shell (sentence "echo "setpos (first :xy) (last :xy) "> "axidraw)
+end
+
+to axics
+    cs
+    axipu drawscontainer
+    axipu drawcontainer 110 110
+    if :dry [stop]
+    print shell (sentence "echo "cs "> "axidraw)
+end
+
+to axipd
+    pd
+    if :dry [stop]
+    print shell (sentence "echo "pd "> "axidraw)
+end
+
+to loop
+    repeat forever [wait 10 safe_run first shell [cat logo_in_pipe]]
+end
+
+to uniquefn
+    output first first shell [date -u +%y%m%d-%H%M]
+end
+
+make "STARTUP [print "Loaded_from_file make "dry "true dribble (word "logo- uniquefn ".logo)] 
